@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Система обліку курсів</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af',
+                        secondary: '#f3f4f6',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen overflow-hidden">
+
+    <div id="login-screen" class="w-full h-full flex items-center justify-center bg-gray-100">
+        <div class="bg-white p-8 rounded-xl shadow-md w-96 text-center fade-in">
+            <div class="w-16 h-16 bg-blue-100 text-primary rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Education Control</h2>
+            <div class="space-y-4">
+                <button onclick="login('admin')" class="w-full bg-primary text-white py-3 rounded-lg font-medium hover:bg-blue-800 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-user-shield mr-2"></i> Адміністратор
+                </button>
+                <button onclick="login('viewer')" class="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors flex items-center justify-center">
+                    <i class="fa-solid fa-eye mr-2"></i> Глядач
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-wrapper" class="hidden w-full h-full flex-row">
+        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col h-full hidden md:flex transition-all duration-300">
+            <div class="h-16 flex items-center px-6 border-b border-gray-200">
+                <i class="fa-solid fa-graduation-cap text-primary text-2xl mr-3"></i>
+                <span class="font-bold text-lg text-gray-800">Education Control</span>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-item flex items-center px-4 py-3 bg-blue-50 text-primary rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-chart-pie w-6"></i> Дашборд
+                </a>
+                <a href="#" onclick="switchTab('staff')" id="nav-staff" class="nav-item flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-users w-6"></i> Персонал
+                </a>
+                <a href="#" onclick="switchTab('courses')" id="nav-courses" class="nav-item flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-book w-6"></i> Каталог курсів
+                </a>
+                <a href="#" onclick="switchTab('tracking')" id="nav-tracking" class="nav-item flex items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">
+                    <i class="fa-solid fa-tasks w-6"></i> Контроль навчання
+                </a>
+            </nav>
+            <div class="p-4 border-t border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-primary font-bold">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium text-gray-700" id="user-role-label"></p>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="text-red-500 hover:text-red-700 p-2" title="Вийти">
+                        <i class="fa-solid fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full overflow-hidden">
+            <header class="h-16 bg-white border-b border-gray-200 flex items-center px-6 md:px-8 shadow-sm z-10">
+                <button class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none mr-4">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+                <h1 id="page-title" class="text-xl font-semibold text-gray-800">Дашборд</h1>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50 custom-scrollbar" id="main-content">
+                
+                <div id="tab-dashboard" class="tab-content fade-in block">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Всього працівників</p>
+                                    <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-staff-count">0</h3>
+                                </div>
+                                <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                                    <i class="fa-solid fa-users text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Активних курсів</p>
+                                    <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-courses-count">0</h3>
+                                </div>
+                                <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                                    <i class="fa-solid fa-book-open text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500">Успішність</p>
+                                    <h3 class="text-3xl font-bold text-gray-800 mt-2" id="stat-completed-rate">0%</h3>
+                                </div>
+                                <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                                    <i class="fa-solid fa-award text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-100">
+                            <h3 class="text-lg font-semibold text-gray-800">Останні оновлення статусів</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4" id="recent-activity-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-staff" class="tab-content fade-in hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="relative w-64">
+                            <input type="text" placeholder="Пошук працівника..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <button onclick="openModal('modal-add-staff')" class="bg-primary hover:bg-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center admin-only">
+                            <i class="fa-solid fa-plus mr-2"></i> Додати працівника
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full whitespace-nowrap">
+                                <thead class="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ПІБ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Посада</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Відділ</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider admin-only">Дії</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200" id="table-staff-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-courses" class="tab-content fade-in hidden">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="relative w-64">
+                            <input type="text" placeholder="Пошук курсу..." class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                        </div>
+                        <button onclick="openModal('modal-add-course')" class="bg-primary hover:bg-blue-800 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center admin-only">
+                            <i class="fa-solid fa-plus mr-2"></i> Створити курс
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="courses-grid"></div>
+                </div>
+
+                <div id="tab-tracking" class="tab-content fade-in hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                        <div class="flex space-x-2">
+                            <select id="filter-status" onchange="renderTrackingTable()" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                                <option value="all">Всі статуси</option>
+                                <option value="planned">Заплановано</option>
+                                <option value="in-progress">В процесі</option>
+                                <option value="completed">Завершено</option>
+                            </select>
+                        </div>
+                        <button onclick="openModal('modal-assign-course')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center admin-only">
+                            <i class="fa-solid fa-link mr-2"></i> Призначити
+                        </button>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full whitespace-nowrap">
+                                <thead class="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Працівник</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Назва курсу</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Прогрес</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider admin-only">Оновлення</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200" id="table-tracking-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-add-staff" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center fade-in">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800">Новий працівник</h3>
+                <button onclick="closeModal('modal-add-staff')" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="form-add-staff" onsubmit="handleAddStaff(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ПІБ</label>
+                    <input type="text" id="staff-name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Посада</label>
+                    <input type="text" id="staff-position" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Відділ</label>
+                    <select id="staff-department" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="IT Відділ">IT Відділ</option>
+                        <option value="HR Відділ">HR Відділ</option>
+                        <option value="Відділ продажів">Відділ продажів</option>
+                        <option value="Бухгалтерія">Бухгалтерія</option>
+                        <option value="Керівництво">Керівництво</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="staff-email" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('modal-add-staff')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">Скасувати</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white hover:bg-blue-800 rounded-lg font-medium transition-colors">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-add-course" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center fade-in">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800">Новий курс навчання</h3>
+                <button onclick="closeModal('modal-add-course')" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="form-add-course" onsubmit="handleAddCourse(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Назва курсу</label>
+                    <input type="text" id="course-title" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Провайдер</label>
+                    <input type="text" id="course-provider" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Тривалість (годин)</label>
+                        <input type="number" id="course-duration" required min="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Рівень</label>
+                        <select id="course-level" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="Базовий">Базовий</option>
+                            <option value="Середній">Середній</option>
+                            <option value="Просунутий">Просунутий</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Опис</label>
+                    <textarea id="course-desc" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('modal-add-course')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">Скасувати</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-white hover:bg-blue-800 rounded-lg font-medium transition-colors">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-assign-course" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center fade-in">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800">Призначити курс</h3>
+                <button onclick="closeModal('modal-assign-course')" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="form-assign-course" onsubmit="handleAssignCourse(event)" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Працівник</label>
+                    <select id="assign-staff-id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Навчальний курс</label>
+                    <select id="assign-course-id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"></select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Дедлайн завершення</label>
+                    <input type="date" id="assign-deadline" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('modal-assign-course')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">Скасувати</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg font-medium transition-colors">Призначити</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-update-status" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center fade-in">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-semibold text-gray-800">Оновлення прогресу</h3>
+                <button onclick="closeModal('modal-update-status')" class="text-gray-400 hover:text-gray-600 focus:outline-none">
+                    <i class="fa-solid fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="update-record-id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Новий статус</label>
+                    <select id="update-status-val" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="planned">Заплановано (0%)</option>
+                        <option value="in-progress">В процесі (50%)</option>
+                        <option value="completed">Завершено (100%)</option>
+                    </select>
+                </div>
+                <div class="pt-4 flex justify-end space-x-3">
+                    <button onclick="closeModal('modal-update-status')" class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-colors">Скасувати</button>
+                    <button onclick="saveStatusUpdate()" class="px-4 py-2 bg-primary text-white hover:bg-blue-800 rounded-lg font-medium transition-colors">Зберегти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
